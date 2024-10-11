@@ -1,13 +1,9 @@
-# movies/urls.py
+# users/urls.py
+from django.db import router
+from django.urls import include, path
+from .views import MovieCreateView
 
-from django.urls import path
-from .views import UserViewSet, MovieViewSet, WatchlistViewSet, FavoriteViewSet
-from rest_framework.routers import DefaultRouter
-
-router = DefaultRouter()
-router.register('users', UserViewSet)
-router.register('movies', MovieViewSet)
-router.register('watchlist', WatchlistViewSet)
-router.register('favorites', FavoriteViewSet)
-
-urlpatterns = router.urls
+urlpatterns = [
+    path('users/', include(router.urls)),
+    path('movies/add/', MovieCreateView.as_view(), name='add_movie'),  # Add this line
+]
