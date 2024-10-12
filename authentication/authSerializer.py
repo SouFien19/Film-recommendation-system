@@ -1,17 +1,14 @@
 from rest_framework import serializers
-from django.contrib.auth import authenticate
+from users.models import User  # Importing the custom User model
 
-class LoginSerializer(serializers.Serializer):
-    username = serializers.CharField(required=True)
-    password = serializers.CharField(required=True)
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'email', 'password', 'role']  # Include role if needed
+        extra_kwargs = {'password': {'write_only': True}}
 
-    def validate(self, data):
-        username = data.get('username')
-        password = data.get('password')
-        user = authenticate(username=username, password=password)
-
-        if user is None:
-            raise serializers.ValidationError('Invalid username or password.')
-
-        data['user'] = user
-        return data
+    def create(self, validated_data):
+        user = User(**validated_data)
+        user.set_password(validated_data['password'])  # Hashing the password before saving
+        user.save()
+        return user

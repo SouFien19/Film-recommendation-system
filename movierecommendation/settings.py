@@ -17,23 +17,17 @@ import os
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
-
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'your-default-secret-key')  # Use environment variable for security
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DJANGO_DEBUG', 'True') == 'True'
 
+AUTH_USER_MODEL = 'users.User'
+# Allowed hosts for production
 # settings.py
 
-# ... other settings ...
-
-ALLOWED_HOSTS = []  # Add these entries
-
-# ... other settings ...
-# Application definition
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost']  # Correct format
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -42,14 +36,14 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'users',        # Add users app
-    'movies',       # Add movies app
-    'watchlist',    # Add watchlists app
-    'favorites',    # Add favorites app
+    'users',          # Add users app
+    'movies',         # Add movies app
+    'watchlist',      # Add watchlists app
+    'favorites',      # Add favorites app
     'authentication',  # Add authentication app
     'rest_framework',
-    'rest_framework_simplejwt',
-    'rest_framework_simplejwt.token_blacklist',
+    'rest_framework.authtoken',
+    'rest_framework_simplejwt',  # For JWT authentication
 ]
 
 MIDDLEWARE = [
@@ -61,7 +55,6 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
-
 
 ROOT_URLCONF = 'movierecommendation.urls'
 
@@ -83,31 +76,38 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'movierecommendation.wsgi.application'
 
-# Database configuration
+# Database configuration (update with your credentials)
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'movie-recommendation',  # Replace with your PostgreSQL database name
-        'USER': 'postgres',  # Replace with your PostgreSQL username
-        'PASSWORD': '@@@@',  # Replace with your PostgreSQL password
-        'HOST': 'localhost',
-        'PORT': '5432',
+        'ENGINE': os.getenv('DJANGO_DB_ENGINE', 'django.db.backends.postgresql'),
+        'NAME': os.getenv('DJANGO_DB_NAME', 'movie-recommandation'),  # Replace with your PostgreSQL database name
+        'USER': os.getenv('DJANGO_DB_USER', 'postgres'),  # Replace with your PostgreSQL username
+        'PASSWORD': os.getenv('DJANGO_DB_PASSWORD', '@@@@'),  # Replace with your PostgreSQL password
+        'HOST': os.getenv('DJANGO_DB_HOST', 'localhost'),
+        'PORT': os.getenv('DJANGO_DB_PORT', '5432'),
     }
 }
 
-SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5),  # Set access token lifetime
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),     # Set refresh token lifetime
-    'ROTATE_REFRESH_TOKENS': True,                    # Rotate refresh tokens
-    'BLACKLIST_AFTER_ROTATION': True,                 # Blacklist old refresh tokens
-}
+AUTH_USER_MODEL = 'users.User'  # Custom user model
 
 # REST framework settings
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',  # Use JWT Authentication
+        'rest_framework.authentication.TokenAuthentication',
+        'rest_framework_simplejwt.authentication.JWTAuthentication',  # For JWT
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+        'rest_framework.permissions.AllowAny', 
     ),
 }
+
+# JWT settings (optional)
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+}
+
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
 ]
@@ -120,7 +120,7 @@ AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
         # You can set a minimum length here if desired:
-        # "OPTIONS": {"min_length": 8},
+        "OPTIONS": {"min_length": 8},
     },
     {
         'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
@@ -131,7 +131,7 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 # Internationalization
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = os.getenv('DJANGO_LANGUAGE_CODE', 'en-us')
 TIME_ZONE = os.getenv('DJANGO_TIME_ZONE', 'UTC')
 USE_I18N = True
 USE_TZ = True

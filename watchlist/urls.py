@@ -1,12 +1,9 @@
 # watchlist/urls.py
 
-from django.urls import path, include
-from rest_framework.routers import DefaultRouter
-from .views import WatchlistViewSet
-
-router = DefaultRouter()
-router.register('', WatchlistViewSet)
+from django.urls import path
+from .views import WatchlistCreateView, WatchlistListView
 
 urlpatterns = [
-    path('watchlist/', include(router.urls)),
+    path('watchlist/', WatchlistListView.as_view(), name='watchlist-list'),  # GET for list
+    path('watchlist/create/', WatchlistCreateView.as_view(), name='watchlist-create'),  # POST for create
 ]

@@ -1,69 +1,27 @@
-from django.contrib.auth import authenticate
-from rest_framework import status
+from rest_framework import generics
+from rest_framework.authtoken.views import ObtainAuthToken
+from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
-from rest_framework.views import APIView
-from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework.permissions import AllowAny
-from users.models import User
-from users.serializers import UserSerializer
-from .authSerializer import LoginSerializer  # Ensure the correct import of your LoginSerializer
-
-class RegisterView(APIView):
-    permission_classes = [AllowAny]
-
-    def post(self, request):
-        serializer = UserSerializer(data=request.data)
-        if serializer.is_valid(raise_exception=True):
-            user = serializer.save()
-            return Response({
-                'message': 'User created successfully',
-                'user_id': user.id,
-                'username': user.username,
-                'email': user.email,
-                'role': user.role
-            }, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+from users.models import User  # Importing the custom User model
+from .authSerializer import UserSerializer
+from users.models import User 
+from rest_framework.permissions import AllowAny 
 
 
-class LoginView(APIView):
-    serializer_class = LoginSerializer
-    permission_classes = [AllowAny]
+class UserCreate(generics.CreateAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = [AllowAny]  # Allow any user to access this view
 
-    def post(self, request):
+class UserProfileDetail(generics.RetrieveUpdateDestroyAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    lookup_field = 'username'  # You can change this to 'id' if preferred
+
+class CustomAuthToken(ObtainAuthToken):
+    def post(self, request, *args, **kwargs):
         serializer = self.serializer_class(data=request.data)
-        if not serializer.is_valid():
-            print("Serializer errors:", serializer.errors)  # Debugging line
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-        username = serializer.validated_data['username']
-        password = serializer.validated_data['password']
-        
-        # Debugging output
-        print(f"Logging in with username: {username}, password: {password}")
-
-        user = authenticate(username=username, password=password)
-
-        if user is not None:
-            refresh = RefreshToken.for_user(user)
-            return Response({
-                'refresh': str(refresh),
-                'access': str(refresh.access_token),
-            }, status=status.HTTP_200_OK)
-        else:
-            print("Authentication failed: user not found or invalid credentials.")  # Debugging line
-            return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
-
-class LogoutView(APIView):
-    permission_classes = [AllowAny]
-
-    def post(self, request):
-        try:
-            token = request.data.get('refresh')
-            if token is None:
-                return Response({'error': 'Refresh token is required'}, status=status.HTTP_400_BAD_REQUEST)
-
-            token_obj = RefreshToken(token)
-            token_obj.blacklist()  # Ensure that your JWT settings support blacklisting
-            return Response({'message': 'Logged out successfully'}, status=status.HTTP_205_RESET_CONTENT)
-        except Exception as e:
-            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.validated_data['user']
+        token, created = Token.objects.get_or_create(user=user)
+        return Response({'token': token.key, 'user_id': user.pk, 'username': user.username})

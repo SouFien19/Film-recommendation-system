@@ -1,12 +1,9 @@
 # favorites/urls.py
 
-from django.urls import path, include
-from rest_framework.routers import DefaultRouter
-from .views import FavoriteViewSet
-
-router = DefaultRouter()
-router.register('', FavoriteViewSet)
+from django.urls import path
+from .views import FavoriteCreateView, FavoriteListView
 
 urlpatterns = [
-    path('favorites/', include(router.urls)),
+    path('favorites/', FavoriteListView.as_view(), name='favorite-list'),  # GET for list
+    path('favorites/create/', FavoriteCreateView.as_view(), name='favorite-create'),  # POST for create
 ]

@@ -1,9 +1,12 @@
-# users/urls.py
-from django.db import router
-from django.urls import include, path
-from .views import MovieCreateView
+# movies/urls.py
+
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from .views import MovieViewSet
+
+router = DefaultRouter()
+router.register(r'movies', MovieViewSet)
 
 urlpatterns = [
-    path('users/', include(router.urls)),
-    path('movies/add/', MovieCreateView.as_view(), name='add_movie'),  # Add this line
+    path('', include(router.urls)),
 ]
